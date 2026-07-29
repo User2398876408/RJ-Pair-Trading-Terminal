@@ -1,0 +1,115 @@
+import pandas as pd
+from pathlib import Path
+
+
+class StockLoader:
+
+    def __init__(self, folder):
+
+        self.folder = Path(folder)
+
+
+
+    def list_tickers(self):
+
+        return sorted([
+
+            f.stem
+
+            for f in self.folder.glob("*.csv")
+
+        ])
+
+
+
+
+    def load(self, ticker):
+
+        file = self.folder / f"{ticker}.csv"
+
+
+        df = pd.read_csv(
+
+            file,
+
+            index_col=0
+
+        )
+
+
+        df.reset_index(
+
+            inplace=True
+
+        )
+
+
+        df.columns = [
+
+            c.strip()
+
+            for c in df.columns
+
+        ]
+
+
+
+        df["Date"] = pd.to_datetime(
+
+            df["Date"]
+
+        )
+
+
+
+        df.sort_values(
+
+            "Date",
+
+            inplace=True
+
+        )
+
+
+        return df
+
+
+
+
+
+    def load_sp500(self):
+
+
+        df = pd.read_csv(
+
+            self.folder / "GSPC.csv",
+
+            index_col=0
+
+        )
+
+
+        df.reset_index(
+
+            inplace=True
+
+        )
+
+
+        df["Date"] = pd.to_datetime(
+
+            df["Date"]
+
+        )
+
+
+        df.sort_values(
+
+            "Date",
+
+            inplace=True
+
+        )
+
+
+        return df
