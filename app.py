@@ -7,6 +7,8 @@ from data_loader import StockLoader
 from Config import DATA_FOLDER
 from Charts import candlestick
 from top50_pairs import get_valid_stocks
+from signals_panel import register_signals_panel
+from signal_ranking import generate_stock_ranking
 
 # =========================
 # APP CONFIG
@@ -267,6 +269,11 @@ def create_graph(stock1, stock2, timeframe):
 results = load_results()
 
 
+stock_ranking = generate_stock_ranking(
+    results
+)
+
+
 signal_order = {
 
     "LONG FIRST / SHORT SECOND": 0,
@@ -320,225 +327,432 @@ default_stock2 = tickers[1]
 app.layout = html.Div(
 
     style={
-
         "backgroundColor": RJ_BACKGROUND,
-
         "minHeight": "100vh",
-
-        "padding": "30px",
-
+        "padding": "24px",
         "fontFamily": "Arial",
-
         "color": "white"
-
     },
-
 
     children=[
 
+        # =========================
+        # HEADER
+        # =========================
 
         html.Div(
 
             [
 
-                html.Img(
+                html.Div(
 
-                    src="/assets/RJ+_PRETO.png",
+                    [
+
+                        html.Img(
+
+                            src="/assets/RJ_BRANCO.png",
+
+                            style={
+                                "height": "65px",
+                                "marginRight": "18px"
+                            }
+
+                        ),
+
+                        html.Div(
+
+                            [
+
+                                html.H1(
+
+                                    "Pair Trading Terminal",
+
+                                    style={
+                                        "fontSize": "32px",
+                                        "margin": "0"
+                                    }
+
+                                ),
+
+                                html.P(
+
+                                    "IBOVESPA statistical trading dashboard",
+
+                                    style={
+                                        "margin": "4px 0 0 0",
+                                        "color": "#b8c4b8",
+                                        "fontSize": "14px"
+                                    }
+
+                                )
+
+                            ]
+
+                        )
+
+                    ],
 
                     style={
-
-                        "height": "80px",
-
-                        "marginRight": "20px"
-
+                        "display": "flex",
+                        "alignItems": "center"
                     }
 
                 ),
 
+                html.Div(
 
-                html.H1(
-
-                    "RJ+ Pair Trading Terminal",
+                    id="last_update",
 
                     style={
-
-                        "fontSize": "40px",
-
-                        "margin": "0"
-
+                        "color": RJ_GREEN,
+                        "fontSize": "13px",
+                        "fontWeight": "bold"
                     }
 
                 )
 
             ],
 
-
             style={
-
                 "display": "flex",
-
-                "alignItems": "center"
-
+                "alignItems": "center",
+                "justifyContent": "space-between",
+                "backgroundColor": RJ_PANEL,
+                "padding": "16px 20px",
+                "borderRadius": "14px",
+                "marginBottom": "18px"
             }
 
         ),
 
 
+        # =========================
+        # COLLAPSIBLE CONTROLS
+        # =========================
 
-        html.Hr(),
+        html.Details(
 
-
-
-        html.H3(
-            "First Stock"
-        ),
-
-
-        dcc.Dropdown(
-
-            id="stock1",
-
-            options=dropdown_options,
-
-            value=default_stock1,
+            open=True,
 
             style={
+                "backgroundColor": RJ_PANEL,
+                "padding": "16px 20px",
+                "borderRadius": "14px",
+                "marginBottom": "18px"
+            },
 
-                "color": "black"
+            children=[
 
-            }
+                html.Summary(
+
+                    "Trading Controls",
+
+                    style={
+                        "cursor": "pointer",
+                        "fontSize": "18px",
+                        "fontWeight": "bold",
+                        "marginBottom": "15px"
+                    }
+
+                ),
+
+                html.Div(
+
+                    [
+
+                        html.Div(
+
+                            [
+
+                                html.Label(
+
+                                    "First Stock",
+
+                                    style={
+                                        "display": "block",
+                                        "marginBottom": "7px",
+                                        "fontWeight": "bold"
+                                    }
+
+                                ),
+
+                                dcc.Dropdown(
+
+                                    id="stock1",
+                                    options=dropdown_options,
+                                    value=default_stock1,
+                                    clearable=False,
+
+                                    style={
+                                        "color": "black"
+                                    }
+
+                                )
+
+                            ],
+
+                            style={
+                                "flex": "1",
+                                "minWidth": "200px"
+                            }
+
+                        ),
+
+                        html.Div(
+
+                            [
+
+                                html.Label(
+
+                                    "Second Stock",
+
+                                    style={
+                                        "display": "block",
+                                        "marginBottom": "7px",
+                                        "fontWeight": "bold"
+                                    }
+
+                                ),
+
+                                dcc.Dropdown(
+
+                                    id="stock2",
+                                    options=dropdown_options,
+                                    value=default_stock2,
+                                    clearable=False,
+
+                                    style={
+                                        "color": "black"
+                                    }
+
+                                )
+
+                            ],
+
+                            style={
+                                "flex": "1",
+                                "minWidth": "200px"
+                            }
+
+                        ),
+
+                        html.Div(
+
+                            [
+
+                                html.Label(
+
+                                    "Timeframe",
+
+                                    style={
+                                        "display": "block",
+                                        "marginBottom": "7px",
+                                        "fontWeight": "bold"
+                                    }
+
+                                ),
+
+                                dcc.Dropdown(
+
+                                    id="timeframe",
+
+                                    options=[
+
+                                        {
+                                            "label": "1 Day",
+                                            "value": "1d"
+                                        },
+
+                                        {
+                                            "label": "1 Week",
+                                            "value": "1wk"
+                                        },
+
+                                        {
+                                            "label": "1 Month",
+                                            "value": "1mo"
+                                        }
+
+                                    ],
+
+                                    value="1d",
+                                    clearable=False,
+
+                                    style={
+                                        "color": "black"
+                                    }
+
+                                )
+
+                            ],
+
+                            style={
+                                "flex": "1",
+                                "minWidth": "200px"
+                            }
+
+                        )
+
+                    ],
+
+                    style={
+                        "display": "flex",
+                        "gap": "18px",
+                        "flexWrap": "wrap",
+                        "marginTop": "15px"
+                    }
+
+                )
+
+            ]
 
         ),
 
 
-
-        html.Br(),
-
-
-
-        html.H3(
-            "Second Stock"
-        ),
-
-
-        dcc.Dropdown(
-
-            id="stock2",
-
-            options=dropdown_options,
-
-            value=default_stock2,
-
-            style={
-
-                "color": "black"
-
-            }
-
-        ),
-
-
-
-        html.Br(),
-
-
-
-        html.H3(
-            "Timeframe"
-        ),
-
-
-
-        dcc.Dropdown(
-
-            id="timeframe",
-
-            options=[
-
-                {
-                    "label": "1 Day",
-                    "value": "1d"
-                },
-
-                {
-                    "label": "1 Week",
-                    "value": "1wk"
-                },
-
-                {
-                    "label": "1 Month",
-                    "value": "1mo"
-                }
-
-            ],
-
-            value="1d",
-
-            style={
-
-                "color": "black"
-
-            }
-
-        ),
-
-
-
-        html.Br(),
-
-
+        # =========================
+        # CHART
+        # =========================
 
         html.Div(
 
-            id="stats",
+            [
+
+                html.Div(
+
+                    [
+
+                        html.H2(
+
+                            "Pair Ratio Analysis",
+
+                            style={
+                                "margin": "0"
+                            }
+
+                        ),
+
+                        html.P(
+
+                            "Candlestick ratio with Bollinger Bands, RSI and MACD",
+
+                            style={
+                                "margin": "5px 0 0 0",
+                                "color": "#b8c4b8",
+                                "fontSize": "14px"
+                            }
+
+                        )
+
+                    ],
+
+                    style={
+                        "padding": "18px 20px 0 20px"
+                    }
+
+                ),
+
+                dcc.Graph(
+
+                    id="pair_graph",
+
+                    config={
+                        "displaylogo": False,
+                        "scrollZoom": True,
+                        "responsive": True
+                    },
+
+                    style={
+                        "width": "100%"
+                    }
+
+                )
+
+            ],
 
             style={
-
                 "backgroundColor": RJ_PANEL,
-
-                "padding": "20px",
-
-                "borderRadius": "15px"
-
+                "borderRadius": "14px",
+                "overflow": "hidden",
+                "marginBottom": "18px"
             }
 
         ),
 
 
+        # =========================
+        # SIGNALS + RANKING
+        # =========================
 
-        html.Br(),
+        html.Div(
 
+            [
 
+                # LEFT SIDE
+                html.Div(
 
-        dcc.Graph(
+                    register_signals_panel(app),
 
-            id="pair_graph"
+                    style={
+                        "flex": "3",
+                        "minWidth": "650px"
+                    }
+
+                ),
+
+                # RIGHT SIDE
+                html.Div(
+
+                    [
+
+                        html.H3(
+
+                            "IBOVESPA Stock Ranking",
+
+                            style={
+                                "marginTop": "0",
+                                "marginBottom": "14px"
+                            }
+
+                        ),
+
+                        html.Div(
+                            id="stock-ranking"
+                        )
+
+                    ],
+
+                    style={
+                        "flex": "1",
+                        "minWidth": "260px",
+                        "backgroundColor": "#1f2b1f",
+                        "padding": "15px",
+                        "borderRadius": "12px",
+                        "marginTop": "15px"
+                    }
+
+                )
+
+            ],
+
+            style={
+                "display": "flex",
+                "alignItems": "flex-start",
+                "gap": "18px",
+                "flexWrap": "wrap"
+            }
 
         ),
 
 
+        # =========================
+        # REFRESH
+        # =========================
 
         dcc.Interval(
 
             id="market_refresh",
-
             interval=60000,
-
             n_intervals=0
-
-        ),
-
-
-
-        html.Div(
-
-            id="last_update",
-
-            style={
-
-                "color": RJ_GREEN
-
-            }
 
         )
 
@@ -551,8 +765,6 @@ app.layout = html.Div(
 # =========================
 
 @app.callback(
-
-    Output("stats", "children"),
 
     Output("pair_graph", "figure"),
 
@@ -571,93 +783,6 @@ app.layout = html.Div(
 
 
 def update(stock1, stock2, timeframe, n):
-
-
-    pair = f"{stock1}/{stock2}"
-
-
-    results = load_results()
-
-
-    match = results[
-
-        results["Pair"] == pair
-
-    ]
-
-
-
-    # If the pair exists in scanner results
-
-    if len(match) > 0:
-
-
-        row = match.iloc[0]
-
-
-        stats = [
-
-            html.H2(pair),
-
-
-            html.P(
-                f"Signal: {row['Signal']}"
-            ),
-
-
-            html.P(
-                f"Ratio: {row['Ratio']}"
-            ),
-
-
-            html.P(
-                f"Z-Score: {row['Z-Score']}"
-            ),
-
-
-            html.P(
-                f"RSI: {row['RSI']}"
-            ),
-
-
-            html.P(
-                f"MACD: {row['MACD']}"
-            ),
-
-
-            html.H2(
-
-                row["Signal"],
-
-                style={
-
-                    "color": RJ_GREEN
-
-                }
-
-            )
-
-        ]
-
-
-    else:
-
-
-        stats = [
-
-            html.H2(pair),
-
-
-            html.P(
-                "Pair not found in scanner results"
-            ),
-
-
-            html.P(
-                "Chart is showing live ratio"
-            )
-
-        ]
 
 
 
@@ -689,7 +814,6 @@ def update(stock1, stock2, timeframe, n):
 
     return (
 
-        stats,
 
         graph,
 
@@ -698,6 +822,131 @@ def update(stock1, stock2, timeframe, n):
     )
 
 
+@app.callback(
+    Output("stock-ranking", "children"),
+    Input("market_refresh", "n_intervals")
+)
+def update_stock_ranking(n):
+
+    results = load_results()
+
+    ranking = generate_stock_ranking(
+        results
+    )
+
+    rows = []
+
+    for index, row in ranking.head(15).iterrows():
+
+        score = float(row["Score"])
+        signal = row["Signal"]
+
+        if score > 0:
+            signal_color = RJ_GREEN
+
+        elif score < 0:
+            signal_color = "#ff5555"
+
+        else:
+            signal_color = "#cccccc"
+
+
+        rows.append(
+
+            html.Div(
+
+                [
+
+                    html.Div(
+
+                        [
+
+                            html.Span(
+
+                                str(index + 1),
+
+                                style={
+                                    "color": "#91a091",
+                                    "fontSize": "12px",
+                                    "width": "22px"
+                                }
+
+                            ),
+
+                            html.Span(
+
+                                row["Stock"],
+
+                                style={
+                                    "fontWeight": "bold",
+                                    "fontSize": "14px"
+                                }
+
+                            )
+
+                        ],
+
+                        style={
+                            "display": "flex",
+                            "alignItems": "center"
+                        }
+
+                    ),
+
+                    html.Div(
+
+                        [
+
+                            html.Span(
+
+                                f"{score:.2f}",
+
+                                style={
+                                    "fontWeight": "bold",
+                                    "fontSize": "13px"
+                                }
+
+                            ),
+
+                            html.Span(
+
+                                signal,
+
+                                style={
+                                    "color": signal_color,
+                                    "fontWeight": "bold",
+                                    "fontSize": "11px",
+                                    "marginLeft": "10px",
+                                    "minWidth": "68px",
+                                    "textAlign": "right"
+                                }
+
+                            )
+
+                        ],
+
+                        style={
+                            "display": "flex",
+                            "alignItems": "center"
+                        }
+
+                    )
+
+                ],
+
+                style={
+                    "display": "flex",
+                    "justifyContent": "space-between",
+                    "alignItems": "center",
+                    "padding": "10px 8px",
+                    "borderBottom": "1px solid rgba(255,255,255,0.08)"
+                }
+
+            )
+
+        )
+
+    return rows
 
 # =========================
 # RUN
